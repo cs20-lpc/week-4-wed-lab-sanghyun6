@@ -1,19 +1,23 @@
 template <typename T>
 DoublyList<T>::DoublyList()
-: header(new Node), trailer(new Node) {
-    header->next  = trailer;
+    : header(new Node), trailer(new Node)
+{
+    header->next = trailer;
     trailer->prev = header;
 }
 
 template <typename T>
-DoublyList<T>::DoublyList(const DoublyList<T>& copyObj)
-: header(new Node), trailer(new Node) {
+DoublyList<T>::DoublyList(const DoublyList<T> &copyObj)
+    : header(new Node), trailer(new Node)
+{
     copy(copyObj);
 }
 
 template <typename T>
-DoublyList<T>& DoublyList<T>::operator=(const DoublyList<T>& rightObj) {
-    if (this != &rightObj) {
+DoublyList<T> &DoublyList<T>::operator=(const DoublyList<T> &rightObj)
+{
+    if (this != &rightObj)
+    {
         clear();
         copy(rightObj);
     }
@@ -21,98 +25,168 @@ DoublyList<T>& DoublyList<T>::operator=(const DoublyList<T>& rightObj) {
 }
 
 template <typename T>
-DoublyList<T>::~DoublyList() {
+DoublyList<T>::~DoublyList()
+{
     clear();
     delete header;
     delete trailer;
     header = trailer = nullptr;
 }
 
+// my function, return the node of the position
 template <typename T>
-void DoublyList<T>::append(const T& elem) {
-    // TO DO: Implement the code for the append
+typename DoublyList<T>::Node *DoublyList<T>::getNode(int position) const
+{
+    if (position < 0 || position >= this->length)
+        throw string("getNode: error, position out of bounds");
 
+    Node *curr = header->next;
+    for (int i = 0; i < position; i++)
+        curr = curr->next;
+
+    return curr;
 }
 
 template <typename T>
-void DoublyList<T>::clear() {
-    for (Node* curr = nullptr; header->next != trailer; ) {
+void DoublyList<T>::append(const T &elem)
+{
+    // TO DO: Implement the code for the append
+    Node *last = trailer->prev;
+    Node *n = new Node(elem, trailer, last);
+
+    last->next = n;
+    trailer->prev = n;
+
+    this->length++;
+}
+
+template <typename T>
+void DoublyList<T>::clear()
+{
+    for (Node *curr = nullptr; header->next != trailer;)
+    {
         curr = header->next->next;
         delete header->next;
         header->next = curr;
     }
 
     trailer->prev = header;
-    this->length  = 0;
+    this->length = 0;
 }
 
 template <typename T>
-void DoublyList<T>::copy(const DoublyList<T>& copyObj) {
-    this->length   = copyObj.length;
-    Node* myCurr   = header;
-    Node* copyCurr = copyObj.header->next;
+void DoublyList<T>::copy(const DoublyList<T> &copyObj)
+{
+    this->length = copyObj.length;
+    Node *myCurr = header;
+    Node *copyCurr = copyObj.header->next;
 
-    while (copyCurr != copyObj.trailer) {
-        Node* n      = new Node(copyCurr->value);
+    while (copyCurr != copyObj.trailer)
+    {
+        Node *n = new Node(copyCurr->value);
         myCurr->next = n;
-        n->prev      = myCurr;
-        myCurr       = n;
-        copyCurr     = copyCurr->next;
+        n->prev = myCurr;
+        myCurr = n;
+        copyCurr = copyCurr->next;
     }
 
-    myCurr->next  = trailer;
+    myCurr->next = trailer;
     trailer->prev = myCurr;
 }
 
 template <typename T>
-T DoublyList<T>::getElement(int position) const {
+T DoublyList<T>::getElement(int position) const
+{
     // TO DO: Implent code for getElement at position
+    return getNode(position)->value;
 }
 
 template <typename T>
-int DoublyList<T>::getLength() const {
+int DoublyList<T>::getLength() const
+{
     return this->length;
 }
 
-
 template <typename T>
-void DoublyList<T>::insert(int position, const T& elem) {
-  // TO DO: Implement code to insert an element to list
+void DoublyList<T>::insert(int position, const T &elem)
+{
+    // TO DO: Implement code to insert an element to list
+    if (position < 0 || position > this->length)
+        throw string("insert: error, position out of bounds");
+
+    Node *after;
+
+    if (position == this->length)
+        after = trailer;
+    else
+        after = getNode(position);
+
+    Node *before = after->prev;
+
+    Node *n = new Node(elem, after, before);
+
+    before->next = n;
+    after->prev = n;
+
+    this->length++;
 }
 
 template <typename T>
-bool DoublyList<T>::isEmpty() const {
-    return this->length  == 0
-        && header->next  == trailer
-        && trailer->prev == header;
+bool DoublyList<T>::isEmpty() const
+{
+    return this->length == 0 && header->next == trailer && trailer->prev == header;
 }
 
 template <typename T>
-void DoublyList<T>::remove(int position) {
+void DoublyList<T>::remove(int position)
+{
     // TO DO: Implement code to remove element at given position
+    if (position < 0 || position >= this->length)
+        throw string("remove: error, position out of bounds");
+
+    Node *target = getNode(position);
+    Node *before = target->prev;
+    Node *after = target->next;
+
+    before->next = after;
+    after->prev = before;
+
+    delete target;
+    this->length--;
 }
 
 template <typename T>
-bool DoublyList<T>::search(const T& elem) const {
+bool DoublyList<T>::search(const T &elem) const
+{
     // TO DO: Implement code to search for element
+    for (Node *curr = header->next; curr != trailer; curr = curr->next)
+        if (curr->value == elem)
+            return true;
     return false;
 }
 
 template <typename T>
-void DoublyList<T>::replace(int position, const T& elem) {
+void DoublyList<T>::replace(int position, const T &elem)
+{
     // TO DO: Add code for replace method
+    getNode(position)->value = elem;
 }
 
 template <typename T>
-ostream& operator<<(ostream& outStream, const DoublyList<T>& myObj) {
-    if (myObj.isEmpty()) {
+ostream &operator<<(ostream &outStream, const DoublyList<T> &myObj)
+{
+    if (myObj.isEmpty())
+    {
         outStream << "List is empty, no elements to display.\n";
     }
-    else {
-        typename DoublyList<T>::Node* curr = myObj.header->next;
-        while (curr != myObj.trailer) {
+    else
+    {
+        typename DoublyList<T>::Node *curr = myObj.header->next;
+        while (curr != myObj.trailer)
+        {
             outStream << curr->value;
-            if (curr->next != myObj.trailer) {
+            if (curr->next != myObj.trailer)
+            {
                 outStream << " <--> ";
             }
             curr = curr->next;
